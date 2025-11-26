@@ -43,10 +43,11 @@
     group: root
     mode: 0644
 
-- name: Copy daemon.json configuration file
+
+- name: Create daemon.json configuration file
   become: true
-  ansible.builtin.template:
-    src: daemon.json.j2
+  ansible.builtin.copy:
+    content: "{{ docker_daemon_config | to_nice_json(indent=2) }}\n"
     dest: /etc/docker/daemon.json
     owner: root
     group: root

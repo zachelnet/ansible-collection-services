@@ -181,3 +181,30 @@ docker_facts: true
 docker_fact_files:
   - docker_containers
   - docker_images
+
+
+##########################
+# for daemon.json
+
+default__docker_daemon_config:
+  hosts: "{{ docker_hosts | default(omit) }}"
+  bridge: "{{ 'none' if (docker_disable_default_network | default(false) | bool) else '' }}"
+  features: "{{ {'containerd-snapshotter': true} if (docker_storage_containerd_snapshotter | default(false) | bool) else {} }}"
+  ipv6: "{{ docker_ipv6 | bool }}"
+  ip6tables: "{{ docker_ip6tables if (docker_ipv6 | default(false) | bool) and (docker_ip6tables is defined) else false }}"
+  proxies: "{{ { 'http-proxy': docker_proxy_http, 'https-proxy': docker_proxy_https, 'no-proxy': docker_proxy_no_proxy | default([]) | join(',') } if (docker_configure_proxy | default(false) | bool) else {} }}"
+  fixed-cidr-v6: "{{ docker_fixed_cidr_v6 if (docker_ipv6 | default(false) | bool) and (docker_fixed_cidr_v6 is defined and docker_fixed_cidr_v6) else '' }}"
+  debug: "{{ docker_debug | default(false) | bool }}"
+  default-address-pools: "{{ docker_default_address_pools | default(omit) }}"
+  experimental: "{{ docker_experimental | bool  }}"
+  live-restore: "{{ docker_live_restore | bool }}"
+  insecure-registries: "{{ docker_insecure_registries | default(omit) }}"
+  registry-mirrors: "{{ docker_registry_mirrors | default(omit) }}"
+  storage-driver: "{{ docker_storage_driver if not docker_storage_containerd_snapshotter | bool else omit }}"
+  default-runtime: "{{ docker_default_runtime }}"
+  log-driver: "{{ docker_log_driver }}"
+  log-level: "{{ docker_log_level }}"
+  log-opts:: "{{ docker_log_opts if (docker_log_opts is defined) else {}
+        | combine({ 'max-file': docker_log_opts['max-file'] | string } if (docker_log_opts['max-file'] is defined) else {} )
+        | combine({ 'cache-max-file': docker_log_opts['cache-max-file'] | string } if (docker_log_opts['cache-max-file'] is defined) else {} )}}"
+docker_daemon_config: "{{ default__docker_daemon_config | combine(docker_opts) }}"
